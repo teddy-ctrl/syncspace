@@ -1,0 +1,166 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 70px;
+  background-color: #f0f2f5;
+  border-bottom: 1px solid #ddd;
+  color: #333;
+}
+
+/* --- Left Section --- */
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo {
+  height: 52px;
+  width: 102px;
+}
+
+.logoText {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0e71eb; /* Zoom blue */
+}
+
+/* --- Center Section --- */
+.centerSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.navButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background-color: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #555;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  position: relative;
+}
+
+.navButton:hover {
+  background-color: #e0e6eb;
+}
+
+.navButton.active {
+  color: #0e71eb;
+  font-weight: 600;
+}
+
+.navButton.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 10%;
+  right: 10%;
+  height: 3px;
+  background-color: #0e71eb;
+  border-radius: 2px;
+}
+
+.navIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.navText {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* --- Right Section --- */
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  background-color: #e9eaec;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+.searchIcon {
+  color: #666;
+  width: 18px;
+  height: 18px;
+}
+
+.searchInput {
+  background: transparent;
+  border: none;
+  outline: none;
+  margin-left: 8px;
+  font-size: 0.9rem;
+  width: 150px;
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconButton:hover {
+  background-color: #e0e6eb;
+}
+
+.userMenu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.userButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.userIcon {
+  width: 28px;
+  height: 28px;
+  color: #0e71eb;
+}
+
+.logoutButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoutButton:hover {
+  background-color: #e0e6eb;
+  color: #d9534f; /* Red on hover */
+}

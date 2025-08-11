@@ -1,0 +1,219 @@
+/* FILE: styles/Auth.module.css */
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 80px); /* Adjust for header height */
+  padding: 1rem;
+  background-color: #f9fafb;
+}
+
+.formWrapper {
+  width: 100%;
+  max-width: 28rem;
+  padding: 2.5rem;
+  /* background-color: #ffffff;  */
+  border-radius: 0.75rem;
+  /* box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); */
+}
+
+.title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  text-align: center;
+  color: #1f2937;
+  margin-bottom: 2rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.backButton {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.backButton:hover {
+  color: #111827;
+}
+
+.emailDisplay {
+  font-weight: 400;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+/* --- Floating Label Styles --- */
+.inputGroup {
+  position: relative;
+  margin-top: 1.5rem;
+}
+
+.input {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1rem;
+  color: #030303;
+  background-color: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  position: relative;
+  z-index: 10;
+}
+
+.label {
+  position: absolute;
+  left: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  pointer-events: none;
+  transition: all 0.2s ease-out;
+  z-index: 5;
+  padding: 0 0.25rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.input:focus + .label,
+.input:not(:placeholder-shown) + .label {
+  transform: translateY(-100%) scale(0.85);
+  color: #3b82f6;
+  background-color: #ffffff; /* Match formWrapper background */
+  z-index: 15;
+}
+
+.button {
+  width: 100%;
+  padding: 0.75rem 0;
+  margin-top: 1rem;
+  font-weight: 600;
+  color: white;
+  background-color: #3b82f6;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.button:hover {
+  background-color: #2563eb;
+}
+
+.disabledButton {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.disabledButton:hover {
+  background-color: #e5e7eb;
+}
+
+/* --- Social Login Styles --- */
+.socialDivider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #6b7280;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  font-size: 0.875rem;
+}
+
+.socialDivider::before,
+.socialDivider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.socialDivider:not(:empty)::before { margin-right: 1rem; }
+.socialDivider:not(:empty)::after { margin-left: 1rem; }
+
+.socialGrid {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.socialButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: #4b5563;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.socialIconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  transition: all 0.2s;
+}
+
+.socialButton:hover .socialIconContainer {
+  border-color: #9ca3af;
+  background-color: #f9fafb;
+}
+
+.socialIcon {
+  width: 22px;
+  height: 22px;
+}
+
+.linkText {
+  margin-top: 2rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.link {
+  font-weight: 500;
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.error, .success {
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+}
+
+.error {
+  color: #991b1b;
+  background-color: #fee2e2;
+}
+
+.success {
+  color: #14532d;
+  background-color: #dcfce7;
+}

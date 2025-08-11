@@ -1,0 +1,135 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1; /* This will make it take the remaining height after the header */
+  background-color: #f0f2f5;
+  min-height: calc(100vh - 70px); /* Adjust 70px to your header height */
+}
+
+.card {
+  /* background-color: white; */
+  padding: 40px;
+  border-radius: 16px;
+  /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); */
+  max-width: 600px;
+}
+
+.actionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.actionButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  /* transition: transform 0.2s ease, box-shadow 0.2s ease; */
+  /* background-color: #f9f9f9; */
+  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); */
+}
+
+.actionButton:hover {
+  /* transform: translateY(-3px); */
+  /* box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); */
+}
+
+.iconWrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.newMeeting .iconWrapper {
+  background-color: #ff6e2c; /* Zoom Orange */
+}
+.newMeeting .iconWrapper:hover{
+  background-color: #ff6924; /* Zoom Orange */
+}
+
+.join .iconWrapper,
+.schedule .iconWrapper,
+.shareScreen .iconWrapper {
+  background-color: #0e71eb; /* Zoom Blue */
+}
+
+.icon {
+  width: 32px;
+  height: 32px;
+}
+
+.buttonText {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Styles for the Join Meeting Modal Content */
+.joinModalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.joinInput {
+  width: 90%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.checkboxContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.checkboxItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.joinActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.joinButton, .cancelButton {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.cancelButton {
+  background-color: #f0f2f5;
+  color: #333;
+}
+
+.joinButton {
+  background-color: #0e71eb;
+  color: white;
+}
+
+.joinButton:disabled {
+  background-color: #a0c3eb;
+  cursor: not-allowed;
+}
