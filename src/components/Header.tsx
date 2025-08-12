@@ -1,6 +1,8 @@
-import { useAuth } from '@/contexts/AuthContext';
-import styles from '../styles/Header.module.css';
-import { useRouter } from 'next/router';
+import { useAuth } from "@/contexts/AuthContext";
+import styles from "../styles/Header.module.css";
+import { useRouter } from "next/router";
+import Image from 'next/image'; // Import the Next.js Image component
+import logo from '../../public/logo.png'; // Import the static image asset
 import {
   Home,
   MessageSquare,
@@ -12,8 +14,8 @@ import {
   UserCircle2,
   Bell,
   Search,
-} from 'lucide-react';
-import { KeyboardEvent } from 'react';
+} from "lucide-react";
+import { KeyboardEvent } from "react";
 
 interface NavItemProps {
   label: string;
@@ -34,7 +36,7 @@ const NavItem = ({ label, href, Icon }: NavItemProps) => {
   };
 
   const handleKeyPress = (event: KeyboardEvent<HTMLButtonElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
+    if (event.key === "Enter" || event.key === " ") {
       handleClick();
     }
   };
@@ -42,10 +44,11 @@ const NavItem = ({ label, href, Icon }: NavItemProps) => {
   return (
     <button
       onClick={handleClick}
-      onKeyPress={handleKeyPress}
-      className={`${styles.navButton} ${isActive ? styles.active : ''}`}
-      aria-current={isActive ? 'page' : undefined}
+      onKeyDown={handleKeyPress} // Using onKeyDown is slightly more conventional for keyboard events
+      className={`${styles.navButton} ${isActive ? styles.active : ""}`}
+      aria-current={isActive ? "page" : undefined}
       role="link"
+      tabIndex={0} // Ensure the button is focusable
     >
       <Icon className={styles.navIcon} aria-hidden="true" />
       <span className={styles.navText}>{label}</span>
@@ -60,7 +63,15 @@ export default function Header() {
     <header className={styles.header}>
       {/* Left Section */}
       <div className={styles.leftSection}>
-        <img src="/logo.png" alt="Unity Utopia Logo" className={styles.logo} />
+        {/* FIX: Replaced <img> with the optimized Next.js Image component */}
+        <Image
+          src={logo}
+          alt="Unity Utopia Logo"
+          className={styles.logo}
+          width={40} // Provide explicit width for layout stability
+          height={40} // Provide explicit height for layout stability
+          priority // Prioritize loading as it's likely part of the LCP
+        />
       </div>
 
       {/* Center Section */}
@@ -78,9 +89,13 @@ export default function Header() {
       <div className={styles.rightSection}>
         <div className={styles.searchBar}>
           <Search className={styles.searchIcon} />
-          <input type="text" placeholder="Search" className={styles.searchInput} />
+          <input
+            type="text"
+            placeholder="Search"
+            className={styles.searchInput}
+          />
         </div>
-        
+
         {!isLoading && user && (
           <>
             <button className={styles.iconButton} title="Notifications">

@@ -43,8 +43,12 @@ export default function RegisterPage() {
       }
       setSuccess("Registration successful! Redirecting to login...");
       setTimeout(() => router.push("/login"), 2000);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) { // FIX: Changed type from 'any' to 'unknown'
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unexpected error occurred during registration.");
+      }
     } finally {
       setIsSubmitting(false);
     }

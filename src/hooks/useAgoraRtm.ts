@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 export type RtmEvent = 
   | { type: 'reaction', emoji: string, fromName: string }
   | { type: 'raise-hand', userId: string, isRaised: boolean }
-  | { type: 'tldraw-event', data: any };
+  | { type: 'tldraw-event', data: unknown };
 
 export const useAgoraRtm = (channelName: string) => {
   const { user, token: authToken } = useAuth();
@@ -18,7 +18,8 @@ export const useAgoraRtm = (channelName: string) => {
   const [raiseHandEvents, setRaiseHandEvents] = useState<Extract<RtmEvent, { type: 'raise-hand' }>[]>([]);
   const [tldrawEvents, setTldrawEvents] = useState<Extract<RtmEvent, { type: 'tldraw-event' }>[]>([]);
 
-  const onMessage = useCallback((message: RtmMessage, memberId: string) => {
+  // FIX: Removed unused 'memberId' parameter to satisfy the linter.
+  const onMessage = useCallback((message: RtmMessage) => {
     if (message.messageType === 'TEXT') {
       try {
         const eventData = JSON.parse(message.text) as RtmEvent;

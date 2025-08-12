@@ -168,7 +168,8 @@ const ChatPanel = ({ roomName, user }: PanelProps) => {
         newSocket.disconnect();
       }
     };
-  }, [roomName]);
+    // FIX: Added 'user' to dependency array for correctness, although it's unlikely to change mid-call.
+  }, [roomName, user]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();

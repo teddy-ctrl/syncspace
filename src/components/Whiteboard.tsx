@@ -1,4 +1,4 @@
-import { Tldraw, useEditor, Editor, TLRecord, TLChange } from '@tldraw/tldraw';
+import { Tldraw, useEditor, TLRecord, TLChange } from '@tldraw/tldraw'; // FIX: Removed unused 'Editor' type
 import '@tldraw/tldraw/tldraw.css';
 import { useEffect } from 'react';
 import { X } from 'lucide-react';

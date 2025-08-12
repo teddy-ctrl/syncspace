@@ -35,13 +35,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setToken(null);
     // Redirect to login page unless already there
-    if (router.pathname !== "/login") {
+    if (router.pathname !== "/login" && router.pathname !== "/register") {
         router.push("/login");
     }
   };
 
   useEffect(() => {
-    setIsLoading(true);
+    // No need to set isLoading(true) here as it's the initial state.
     try {
       const storedToken = localStorage.getItem("token");
       if (storedToken) {
@@ -53,8 +53,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setToken(storedToken);
         }
       }
-    } catch (error) {
-      console.error("Invalid token found, logging out.");
+    } catch { // FIX: Removed unused 'error' variable from the catch block.
+      // console.error("Invalid token found, logging out."); // Optional: can be removed if noisy
       logout();
     } finally {
       setIsLoading(false);
