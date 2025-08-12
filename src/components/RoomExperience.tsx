@@ -17,8 +17,8 @@ import {
 } from "lucide-react";
 import styles from "../styles/RoomExperience.module.css";
 import dynamic from "next/dynamic";
-import { useAuth } from "../contexts/AuthContext";
-import { useAgoraRtm, RtmEvent } from "../hooks/useAgoraRtm";
+// FIX: Removed unused 'useAuth' and 'RtmEvent' imports
+import { useAgoraRtm } from "../hooks/useAgoraRtm";
 
 const Whiteboard = dynamic(() => import("./Whiteboard"), { ssr: false });
 
@@ -33,7 +33,7 @@ import {
   RemoteUser,
   LocalVideoTrack,
   useRTCClient,
-  IAgoraRTCError, // FIX: Corrected the import from AgoraRTCError to IAgoraRTCError
+  IAgoraRTCError, // FIX: Corrected the import from AgoraRTCError
   useLocalScreenTrack,
 } from "agora-rtc-react";
 import type { IAgoraRTCRemoteUser, IAgoraRTCClient } from "agora-rtc-sdk-ng";
@@ -86,7 +86,6 @@ const ParticipantsPanel = ({
         Participants ({1 + remoteUsers.length})
       </h2>
       <ul className={styles.userList}>
-        {/* Local User */}
         <li className={styles.userListItem}>
           <UserIcon size={20} />
           <span className={styles.userName}>{localUser.name} (You)</span>
@@ -106,7 +105,6 @@ const ParticipantsPanel = ({
             )}
           </div>
         </li>
-        {/* Remote Users */}
         {remoteUsers.map((user) => (
           <li key={user.uid} className={styles.userListItem}>
             <UserIcon size={20} />
@@ -150,10 +148,9 @@ const ChatPanel = ({ roomName, user }: PanelProps) => {
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-  useEffect(scrollToBottom, [messages]);
+  }, [messages]);
 
   useEffect(() => {
     const newSocket = io(process.env.NEXT_PUBLIC_API_URL as string);
@@ -218,7 +215,6 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
   const { sendRtmEvent, reactionEvents, raiseHandEvents } =
     useAgoraRtm(roomName);
 
-  // --- LOCAL STATE ---
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
@@ -228,20 +224,17 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const [raisedHands, setRaisedHands] = useState<Set<string>>(new Set());
 
-  // --- AGORA HOOKS ---
   const { localMicrophoneTrack } = useLocalMicrophoneTrack(micOn);
   const { localCameraTrack } = useLocalCameraTrack(cameraOn);
   const { screenTrack, error: screenShareError } = useLocalScreenTrack(
     isScreenSharing,
-    {},
+    { withAudio: "enable" },
     "auto"
   );
   const remoteUsers = useRemoteUsers();
 
-  // Publish camera and mic initially
   usePublish([localMicrophoneTrack, localCameraTrack]);
 
-  // --- UID HASHING & JOIN LOGIC ---
   const [integerUid, setIntegerUid] = useState<number>(0);
   useEffect(() => {
     if (user?.id) {
@@ -265,17 +258,23 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
       alert(
         "Could not start screen sharing. Please check browser permissions."
       );
-      setIsScreenSharing(false); // Reset state on error
+      setIsScreenSharing(false);
     }
   }, [screenShareError]);
 
-  // --- ROBUST SCREEN SHARING LOGIC ---
   const handleToggleScreenShare = async () => {
     if (isScreenSharing) {
-      // --- STOPPING screen share ---
       setIsScreenSharing(false);
-      if (screenTrack && agoraClient.localTracks.includes(screenTrack)) {
-        await agoraClient.unpublish(screenTrack);
+      if (screenTrack) {
+        // FIX: Handle both single track and array of tracks
+        const tracksToUnpublish = Array.isArray(screenTrack)
+          ? screenTrack
+          : [screenTrack];
+        for (const track of tracksToUnpublish) {
+          if (agoraClient.localTracks.includes(track)) {
+            await agoraClient.unpublish(track);
+          }
+        }
       }
       if (
         localCameraTrack &&
@@ -284,7 +283,6 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
         await agoraClient.publish(localCameraTrack);
       }
     } else {
-      // --- STARTING screen share ---
       if (
         localCameraTrack &&
         agoraClient.localTracks.includes(localCameraTrack)
@@ -295,16 +293,17 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
     }
   };
 
-  // This `useEffect` handles publishing the screen track once it's created by the hook.
   useEffect(() => {
     if (isScreenSharing && screenTrack) {
-      agoraClient.publish(screenTrack).catch((e) => {
+      const tracksToPublish = Array.isArray(screenTrack)
+        ? screenTrack
+        : [screenTrack];
+      agoraClient.publish(tracksToPublish).catch((e) => {
         console.error("Failed to publish screen track:", e);
       });
     }
   }, [isScreenSharing, screenTrack, agoraClient]);
 
-  // --- RTM EVENT PROCESSING ---
   useEffect(() => {
     reactionEvents.forEach((event) => {
       const newReaction: Reaction = {
@@ -334,7 +333,6 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
     });
   }, [raiseHandEvents]);
 
-  // --- CONTROL HANDLERS ---
   const handleEndCall = useCallback(async () => {
     agoraClient.leave();
     router.push("/");
@@ -349,12 +347,14 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
     sendRtmEvent({ type: "reaction", emoji, fromName: user.name });
   };
 
-  // --- UI RENDER LOGIC ---
   const isSomeoneSharing =
     isScreenSharing || remoteUsers.some((u) => u.screenTrack);
   const mainStageUser = isScreenSharing
     ? null
     : remoteUsers.find((u) => u.screenTrack);
+  const screenVideoTrack = Array.isArray(screenTrack)
+    ? screenTrack[0]
+    : screenTrack;
 
   return (
     <div className={styles.container}>
@@ -365,7 +365,6 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
           onClose={() => setShowWhiteboard(false)}
         />
       )}
-
       <main
         className={`${styles.mainContent} ${
           showChat || showParticipants ? styles.panelActive : ""
@@ -376,8 +375,8 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
           {isSomeoneSharing ? (
             <div className={styles.screenShareView}>
               <div className={styles.mainScreen}>
-                {isScreenSharing && (
-                  <LocalVideoTrack track={screenTrack} play={true} />
+                {isScreenSharing && screenVideoTrack && (
+                  <LocalVideoTrack track={screenVideoTrack} play={true} />
                 )}
                 {mainStageUser && (
                   <RemoteUser
@@ -555,7 +554,6 @@ export default function RoomExperience(props: RoomProps) {
     }
   }, []);
 
-  // FIX: Correctly typed the 'err' parameter for the handler.
   const handleError = (err: IAgoraRTCError) => {
     console.error("Agora RTC Error:", err);
   };
