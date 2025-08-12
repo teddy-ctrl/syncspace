@@ -343,15 +343,13 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
     sendRtmEvent({ type: "reaction", emoji, fromName: user.name });
   };
 
-  // --- FIX IS HERE ---
-  // The most reliable way to check for a screen-share user is to see if their video track's type is "screen".
-  // The `remoteUsers` array can contain separate entries for a user's camera and their screen share.
+  // --- THE FIX IS HERE ---
+  // Changed `.getTrackMediaType()` to the correct property `.trackMediaType`
   const screenSharingUser = remoteUsers.find(
-    (u) => u.videoTrack?.getTrackMediaType() === "screen"
+    (u) => u.videoTrack?.trackMediaType === "screen"
   );
   const isSomeoneSharing = isScreenSharing || !!screenSharingUser;
 
-  // Render the local screen share track if the user is sharing.
   const screenVideoTrack = Array.isArray(screenTrack)
     ? screenTrack[0]
     : screenTrack;
