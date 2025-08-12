@@ -35,7 +35,7 @@ import {
   IAgoraRTCError,
   useLocalScreenTrack,
 } from "agora-rtc-react";
-import type { IAgoraRTCRemoteUser, IAgoraRTCClient, ILocalVideoTrack } from "agora-rtc-sdk-ng";
+import type { IAgoraRTCRemoteUser, IAgoraRTCClient, ILocalVideoTrack, IRemoteVideoTrack } from "agora-rtc-sdk-ng";
 
 // --- TYPE DEFINITIONS ---
 interface User { id: string; name: string; email: string; }
@@ -44,9 +44,30 @@ interface PanelProps { roomName: string; user: User; }
 interface Reaction { id: number; emoji: string; from: string; }
 interface Message { id: string; content: string; createdAt: string; author: { id: string; name: string }; }
 
+// A custom type to work around the library's missing 'screenTrack' property on IAgoraRTCRemoteUser
+interface RemoteUserWithScreenTrack extends IAgoraRTCRemoteUser {
+  screenTrack?: IRemoteVideoTrack;
+}
 
-// --- PANEL COMPONENTS ---
-const ParticipantsPanel = ({ localUser, remoteUsers, raisedHands, micOn, cameraOn }: { localUser: User; remoteUsers: IAgoraRTCRemoteUser[]; raisedHands: Set<string>; micOn: boolean; cameraOn: boolean; }) => {
+// A TypeScript type guard to safely check if a remote user is a screen-sharing user
+function isScreenShareUser(user: IAgoraRTCRemoteUser): user is RemoteUserWithScreenTrack {
+  return 'screenTrack' in user && user.hasVideo;
+}
+
+// --- UI SUB-COMPONENTS ---
+const ParticipantsPanel = ({
+  localUser,
+  remoteUsers,
+  raisedHands,
+  micOn,
+  cameraOn,
+}: {
+  localUser: User;
+  remoteUsers: IAgoraRTCRemoteUser[];
+  raisedHands: Set<string>;
+  micOn: boolean;
+  cameraOn: boolean;
+}) => {
   return (
     <aside className={styles.participantsPanel}>
       <h2 className={styles.panelTitle}>Participants ({1 + remoteUsers.length})</h2>
@@ -75,6 +96,7 @@ const ParticipantsPanel = ({ localUser, remoteUsers, raisedHands, micOn, cameraO
     </aside>
   );
 };
+
 const FloatingReactions = ({ reactions }: { reactions: Reaction[] }) => (
   <div className={styles.reactionsContainer}>
     {reactions.map((r) => (
@@ -85,6 +107,7 @@ const FloatingReactions = ({ reactions }: { reactions: Reaction[] }) => (
     ))}
   </div>
 );
+
 const ChatPanel = ({ roomName, user }: PanelProps) => {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -241,12 +264,9 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
     sendRtmEvent({ type: 'reaction', emoji, fromName: user.name });
   };
 
-  // --- THE FIX IS HERE ---
-  // Reverting to the 'any' type assertion as a pragmatic solution to the library's
-  // internal type conflicts which prevent a clean type guard from working.
-  // This will pass the build and function correctly at runtime.
-  const screenSharingUser = remoteUsers.find((u) => (u as any).screenTrack);
-  const participantUsers = remoteUsers.filter(user => !(user as any).screenTrack);
+  // --- UI RENDER LOGIC (FIXES APPLIED) ---
+  const screenSharingUser = remoteUsers.find(isScreenShareUser);
+  const participantUsers = remoteUsers.filter(u => !isScreenShareUser(u));
 
   const isSomeoneSharing = isScreenSharing || !!screenSharingUser;
   const screenVideoTrack = Array.isArray(screenTrack) ? screenTrack[0] : screenTrack;
