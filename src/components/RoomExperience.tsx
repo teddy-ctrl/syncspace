@@ -17,8 +17,8 @@ import {
 } from "lucide-react";
 import styles from "../styles/RoomExperience.module.css";
 import dynamic from "next/dynamic";
-// FIX: Removed unused 'useAuth' and 'RtmEvent' imports
-import { useAgoraRtm } from "../hooks/useAgoraRtm";
+import { useAuth } from "../contexts/AuthContext";
+import { useAgoraRtm, RtmEvent } from "../hooks/useAgoraRtm";
 
 const Whiteboard = dynamic(() => import("./Whiteboard"), { ssr: false });
 
@@ -33,7 +33,7 @@ import {
   RemoteUser,
   LocalVideoTrack,
   useRTCClient,
-  AgoraRTCError,
+  IAgoraRTCError, // FIX: Corrected the import from AgoraRTCError to IAgoraRTCError
   useLocalScreenTrack,
 } from "agora-rtc-react";
 import type { IAgoraRTCRemoteUser, IAgoraRTCClient } from "agora-rtc-sdk-ng";
@@ -274,12 +274,9 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
     if (isScreenSharing) {
       // --- STOPPING screen share ---
       setIsScreenSharing(false);
-      // The `useLocalScreenTrack` hook will automatically stop and dispose the track.
-      // We must unpublish it first.
       if (screenTrack && agoraClient.localTracks.includes(screenTrack)) {
         await agoraClient.unpublish(screenTrack);
       }
-      // Re-publish the camera track if it exists and is not already published.
       if (
         localCameraTrack &&
         !agoraClient.localTracks.includes(localCameraTrack)
@@ -288,14 +285,12 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
       }
     } else {
       // --- STARTING screen share ---
-      // Unpublish the camera track first to avoid multiple video streams.
       if (
         localCameraTrack &&
         agoraClient.localTracks.includes(localCameraTrack)
       ) {
         await agoraClient.unpublish(localCameraTrack);
       }
-      // This will trigger the `useLocalScreenTrack` hook to create the track.
       setIsScreenSharing(true);
     }
   };
@@ -560,7 +555,8 @@ export default function RoomExperience(props: RoomProps) {
     }
   }, []);
 
-  const handleError = (err: AgoraRTCError) => {
+  // FIX: Correctly typed the 'err' parameter for the handler.
+  const handleError = (err: IAgoraRTCError) => {
     console.error("Agora RTC Error:", err);
   };
 
