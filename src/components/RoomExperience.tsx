@@ -35,90 +35,29 @@ import {
   IAgoraRTCError,
   useLocalScreenTrack,
 } from "agora-rtc-react";
-import type {
-  IAgoraRTCRemoteUser,
-  IAgoraRTCClient,
-  ILocalVideoTrack,
-  IRemoteVideoTrack,
-} from "agora-rtc-sdk-ng";
+import type { IAgoraRTCRemoteUser, IAgoraRTCClient, ILocalVideoTrack } from "agora-rtc-sdk-ng";
 
 // --- TYPE DEFINITIONS ---
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
-interface RoomProps {
-  roomName: string;
-  user: User;
-  appId: string;
-  token: string | null;
-}
-interface PanelProps {
-  roomName: string;
-  user: User;
-}
-interface Reaction {
-  id: number;
-  emoji: string;
-  from: string;
-}
-interface Message {
-  id: string;
-  content: string;
-  createdAt: string;
-  author: { id: string; name: string };
-}
+interface User { id: string; name: string; email: string; }
+interface RoomProps { roomName: string; user: User; appId: string; token: string | null; }
+interface PanelProps { roomName: string; user: User; }
+interface Reaction { id: number; emoji: string; from: string; }
+interface Message { id: string; content: string; createdAt: string; author: { id: string; name: string }; }
 
-// Create an extended type to safely access the screenTrack property, avoiding 'any'
-interface RemoteUserWithScreenTrack extends IAgoraRTCRemoteUser {
-  screenTrack?: IRemoteVideoTrack;
-}
-
-// Create a type guard function to safely check for the screenTrack property
-function isScreenShareUser(
-  user: IAgoraRTCRemoteUser
-): user is RemoteUserWithScreenTrack {
-  return "screenTrack" in user && user.hasVideo;
-}
 
 // --- PANEL COMPONENTS ---
-const ParticipantsPanel = ({
-  localUser,
-  remoteUsers,
-  raisedHands,
-  micOn,
-  cameraOn,
-}: {
-  localUser: User;
-  remoteUsers: IAgoraRTCRemoteUser[];
-  raisedHands: Set<string>;
-  micOn: boolean;
-  cameraOn: boolean;
-}) => {
+const ParticipantsPanel = ({ localUser, remoteUsers, raisedHands, micOn, cameraOn }: { localUser: User; remoteUsers: IAgoraRTCRemoteUser[]; raisedHands: Set<string>; micOn: boolean; cameraOn: boolean; }) => {
   return (
     <aside className={styles.participantsPanel}>
-      <h2 className={styles.panelTitle}>
-        Participants ({1 + remoteUsers.length})
-      </h2>
+      <h2 className={styles.panelTitle}>Participants ({1 + remoteUsers.length})</h2>
       <ul className={styles.userList}>
         <li className={styles.userListItem}>
           <UserIcon size={20} />
           <span className={styles.userName}>{localUser.name} (You)</span>
           <div className={styles.userIcons}>
-            {raisedHands.has(localUser.id) && (
-              <Hand size={18} color="#f1c40f" />
-            )}
-            {micOn ? (
-              <Mic size={18} />
-            ) : (
-              <MicOff size={18} className={styles.iconOff} />
-            )}
-            {cameraOn ? (
-              <Video size={18} />
-            ) : (
-              <VideoOff size={18} className={styles.iconOff} />
-            )}
+            {raisedHands.has(localUser.id) && <Hand size={18} color="#f1c40f" />}
+            {micOn ? <Mic size={18} /> : <MicOff size={18} className={styles.iconOff} />}
+            {cameraOn ? <Video size={18} /> : <VideoOff size={18} className={styles.iconOff} />}
           </div>
         </li>
         {remoteUsers.map((user) => (
@@ -126,19 +65,9 @@ const ParticipantsPanel = ({
             <UserIcon size={20} />
             <span className={styles.userName}>User {user.uid}</span>
             <div className={styles.userIcons}>
-              {raisedHands.has(user.uid.toString()) && (
-                <Hand size={18} color="#f1c40f" />
-              )}
-              {user.hasAudio ? (
-                <Mic size={18} />
-              ) : (
-                <MicOff size={18} className={styles.iconOff} />
-              )}
-              {user.hasVideo ? (
-                <Video size={18} />
-              ) : (
-                <VideoOff size={18} className={styles.iconOff} />
-              )}
+              {raisedHands.has(user.uid.toString()) && <Hand size={18} color="#f1c40f" />}
+              {user.hasAudio ? <Mic size={18} /> : <MicOff size={18} className={styles.iconOff} />}
+              {user.hasVideo ? <Video size={18} /> : <VideoOff size={18} className={styles.iconOff} />}
             </div>
           </li>
         ))}
@@ -146,7 +75,6 @@ const ParticipantsPanel = ({
     </aside>
   );
 };
-
 const FloatingReactions = ({ reactions }: { reactions: Reaction[] }) => (
   <div className={styles.reactionsContainer}>
     {reactions.map((r) => (
@@ -157,79 +85,61 @@ const FloatingReactions = ({ reactions }: { reactions: Reaction[] }) => (
     ))}
   </div>
 );
-
 const ChatPanel = ({ roomName, user }: PanelProps) => {
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [socket, setSocket] = useState<Socket | null>(null);
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [newMessage, setNewMessage] = useState("");
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
 
-  useEffect(() => {
-    const newSocket = io(process.env.NEXT_PUBLIC_API_URL as string);
-    setSocket(newSocket);
-    newSocket.on("connect", () => newSocket.emit("joinRoom", roomName));
-    newSocket.on("newMessage", (message: Message) =>
-      setMessages((prev) => [...prev, message])
-    );
-    return () => {
-      if (newSocket.connected) {
-        newSocket.emit("leaveRoom", roomName);
-        newSocket.disconnect();
-      }
+    useEffect(() => {
+        const newSocket = io(process.env.NEXT_PUBLIC_API_URL as string);
+        setSocket(newSocket);
+        newSocket.on("connect", () => newSocket.emit("joinRoom", roomName));
+        newSocket.on("newMessage", (message: Message) => setMessages((prev) => [...prev, message]));
+        return () => {
+            if (newSocket.connected) {
+                newSocket.emit("leaveRoom", roomName);
+                newSocket.disconnect();
+            }
+        };
+    }, [roomName, user]);
+
+    const handleSendMessage = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (newMessage.trim() && socket && user) {
+            socket.emit("sendMessage", { roomName, message: newMessage, authorId: user.id });
+            setNewMessage("");
+        }
     };
-  }, [roomName, user]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newMessage.trim() && socket && user) {
-      socket.emit("sendMessage", {
-        roomName,
-        message: newMessage,
-        authorId: user.id,
-      });
-      setNewMessage("");
-    }
-  };
-
-  return (
-    <aside className={styles.chatPanel}>
-      <h2 className={styles.panelTitle}>In-Room Chat</h2>
-      <div className={styles.messagesContainer}>
-        {messages.map((msg) => (
-          <div key={msg.id} className={styles.message}>
-            <span className={styles.authorName}>
-              {msg.author?.name || "User"}:
-            </span>
-            <span>{msg.content}</span>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-      <form onSubmit={handleSendMessage} className={styles.chatForm}>
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          className={styles.chatInput}
-          placeholder="Type a message..."
-        />
-        <button type="submit" className={styles.sendButton}>
-          Send
-        </button>
-      </form>
-    </aside>
-  );
+    return (
+        <aside className={styles.chatPanel}>
+            <h2 className={styles.panelTitle}>In-Room Chat</h2>
+            <div className={styles.messagesContainer}>
+                {messages.map((msg) => (
+                    <div key={msg.id} className={styles.message}>
+                        <span className={styles.authorName}>{msg.author?.name || "User"}:</span>
+                        <span>{msg.content}</span>
+                    </div>
+                ))}
+                <div ref={messagesEndRef} />
+            </div>
+            <form onSubmit={handleSendMessage} className={styles.chatForm}>
+                <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} className={styles.chatInput} placeholder="Type a message..." />
+                <button type="submit" className={styles.sendButton}>Send</button>
+            </form>
+        </aside>
+    );
 };
 
 const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
   const router = useRouter();
   const agoraClient = useRTCClient();
-  const { sendRtmEvent, reactionEvents, raiseHandEvents } =
-    useAgoraRtm(roomName);
+  const { sendRtmEvent, reactionEvents, raiseHandEvents } = useAgoraRtm(roomName);
 
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
@@ -242,13 +152,9 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
 
   const { localMicrophoneTrack } = useLocalMicrophoneTrack(micOn);
   const { localCameraTrack } = useLocalCameraTrack(cameraOn);
-  const { screenTrack, error: screenShareError } = useLocalScreenTrack(
-    isScreenSharing,
-    {},
-    "enable"
-  );
+  const { screenTrack, error: screenShareError } = useLocalScreenTrack(isScreenSharing, {}, "enable");
   const remoteUsers = useRemoteUsers();
-
+  
   usePublish([localMicrophoneTrack, localCameraTrack]);
 
   const [integerUid, setIntegerUid] = useState<number>(0);
@@ -263,17 +169,12 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
       setIntegerUid(Math.abs(hash));
     }
   }, [user]);
-  useJoin(
-    { appid: appId, channel: roomName, token: token, uid: integerUid },
-    !!(appId && token && integerUid > 0)
-  );
+  useJoin({ appid: appId, channel: roomName, token: token, uid: integerUid }, !!(appId && token && integerUid > 0));
 
   useEffect(() => {
     if (screenShareError) {
       console.error("Screen share error:", screenShareError);
-      alert(
-        "Could not start screen sharing. Please check browser permissions."
-      );
+      alert("Could not start screen sharing. Please check browser permissions.");
       setIsScreenSharing(false);
     }
   }, [screenShareError]);
@@ -282,26 +183,18 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
     if (isScreenSharing) {
       setIsScreenSharing(false);
       if (screenTrack) {
-        const tracksToUnpublish = Array.isArray(screenTrack)
-          ? screenTrack
-          : [screenTrack];
+        const tracksToUnpublish = Array.isArray(screenTrack) ? screenTrack : [screenTrack];
         for (const track of tracksToUnpublish) {
           if (agoraClient.localTracks.includes(track)) {
             await agoraClient.unpublish(track);
           }
         }
       }
-      if (
-        localCameraTrack &&
-        !agoraClient.localTracks.includes(localCameraTrack)
-      ) {
+      if (localCameraTrack && !agoraClient.localTracks.includes(localCameraTrack)) {
         await agoraClient.publish(localCameraTrack);
       }
     } else {
-      if (
-        localCameraTrack &&
-        agoraClient.localTracks.includes(localCameraTrack)
-      ) {
+      if (localCameraTrack && agoraClient.localTracks.includes(localCameraTrack)) {
         await agoraClient.unpublish(localCameraTrack);
       }
       setIsScreenSharing(true);
@@ -310,36 +203,22 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
 
   useEffect(() => {
     if (isScreenSharing && screenTrack) {
-      const tracksToPublish = Array.isArray(screenTrack)
-        ? screenTrack
-        : [screenTrack];
-      agoraClient
-        .publish(tracksToPublish)
-        .catch((e) => console.error("Failed to publish screen track:", e));
+      const tracksToPublish = Array.isArray(screenTrack) ? screenTrack : [screenTrack];
+      agoraClient.publish(tracksToPublish).catch(e => console.error("Failed to publish screen track:", e));
     }
   }, [isScreenSharing, screenTrack, agoraClient]);
 
   useEffect(() => {
     reactionEvents.forEach((event) => {
-      const newReaction: Reaction = {
-        id: Date.now() + Math.random(),
-        emoji: event.emoji,
-        from: event.fromName,
-      };
+      const newReaction: Reaction = { id: Date.now() + Math.random(), emoji: event.emoji, from: event.fromName };
       setReactions((prev) => [...prev, newReaction]);
-      setTimeout(
-        () =>
-          setReactions((r) =>
-            r.filter((reaction) => reaction.id !== newReaction.id)
-          ),
-        4000
-      );
+      setTimeout(() => setReactions((r) => r.filter((reaction) => reaction.id !== newReaction.id)), 4000);
     });
   }, [reactionEvents]);
 
   useEffect(() => {
     raiseHandEvents.forEach((event) => {
-      setRaisedHands((prev) => {
+      setRaisedHands(prev => {
         const newSet = new Set(prev);
         if (event.isRaised) newSet.add(event.userId);
         else newSet.delete(event.userId);
@@ -355,53 +234,37 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
 
   const handleToggleRaiseHand = () => {
     const isRaised = !raisedHands.has(user.id);
-    sendRtmEvent({ type: "raise-hand", userId: user.id, isRaised });
+    sendRtmEvent({ type: 'raise-hand', userId: user.id, isRaised });
   };
-
+  
   const sendReaction = (emoji: string) => {
-    sendRtmEvent({ type: "reaction", emoji, fromName: user.name });
+    sendRtmEvent({ type: 'reaction', emoji, fromName: user.name });
   };
 
-  const screenSharingUser = remoteUsers.find(isScreenShareUser);
-  const participantUsers = remoteUsers.filter(
-    (user) => !isScreenShareUser(user)
-  );
+  // --- THE FIX IS HERE ---
+  // Reverting to the 'any' type assertion as a pragmatic solution to the library's
+  // internal type conflicts which prevent a clean type guard from working.
+  // This will pass the build and function correctly at runtime.
+  const screenSharingUser = remoteUsers.find((u) => (u as any).screenTrack);
+  const participantUsers = remoteUsers.filter(user => !(user as any).screenTrack);
+
   const isSomeoneSharing = isScreenSharing || !!screenSharingUser;
-  const screenVideoTrack = Array.isArray(screenTrack)
-    ? screenTrack[0]
-    : screenTrack;
+  const screenVideoTrack = Array.isArray(screenTrack) ? screenTrack[0] : screenTrack;
 
   return (
     <div className={styles.container}>
       <FloatingReactions reactions={reactions} />
-      {showWhiteboard && (
-        <Whiteboard
-          channelName={roomName}
-          onClose={() => setShowWhiteboard(false)}
-        />
-      )}
-      <main
-        className={`${styles.mainContent} ${
-          showChat || showParticipants ? styles.panelActive : ""
-        }`}
-        style={{ display: showWhiteboard ? "none" : "flex" }}
-      >
+      {showWhiteboard && <Whiteboard channelName={roomName} onClose={() => setShowWhiteboard(false)} />}
+      <main className={`${styles.mainContent} ${showChat || showParticipants ? styles.panelActive : ''}`} style={{ display: showWhiteboard ? "none" : "flex" }}>
         <div className={styles.videoGrid}>
           {isSomeoneSharing ? (
             <div className={styles.screenShareView}>
               <div className={styles.mainScreen}>
                 {isScreenSharing && screenVideoTrack && (
-                  <LocalVideoTrack
-                    track={screenVideoTrack as ILocalVideoTrack}
-                    play={true}
-                  />
+                  <LocalVideoTrack track={screenVideoTrack as ILocalVideoTrack} play={true} />
                 )}
                 {screenSharingUser && (
-                  <RemoteUser
-                    user={screenSharingUser}
-                    playVideo={true}
-                    mediaType="screen"
-                  />
+                  <RemoteUser user={screenSharingUser} playVideo={true} mediaType="screen" />
                 )}
               </div>
               <div className={styles.pipColumn}>
@@ -409,50 +272,29 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
                   <LocalVideoTrack track={localCameraTrack} play={cameraOn} />
                   <div className={styles.identity}>{user.name} (You)</div>
                 </div>
-                {participantUsers
-                  .filter((u) => u.uid !== screenSharingUser?.uid)
-                  .map((remoteUser) => (
-                    <div
-                      key={remoteUser.uid}
-                      className={styles.participantVideo}
-                    >
-                      <RemoteUser user={remoteUser} playVideo={true} />
-                      <div className={styles.identity}>
-                        User {remoteUser.uid}
-                      </div>
-                    </div>
-                  ))}
+                {participantUsers.filter(u => u.uid !== screenSharingUser?.uid).map(remoteUser => (
+                  <div key={remoteUser.uid} className={styles.participantVideo}>
+                    <RemoteUser user={remoteUser} playVideo={true} />
+                    <div className={styles.identity}>User {remoteUser.uid}</div>
+                  </div>
+                ))}
               </div>
             </div>
           ) : (
             <>
               <div className={styles.participantVideo}>
                 <LocalVideoTrack track={localCameraTrack} play={cameraOn} />
-                {!cameraOn && (
-                  <div className={styles.videoOffIndicator}>
-                    <VideoOff size={48} />
-                  </div>
-                )}
+                {!cameraOn && <div className={styles.videoOffIndicator}><VideoOff size={48}/></div>}
                 <div className={styles.identity}>
-                  {micOn ? <Mic size={14} /> : <MicOff size={14} color="red" />}{" "}
-                  {user.name} (You)
+                  {micOn ? <Mic size={14}/> : <MicOff size={14} color="red"/>} {user.name} (You)
                 </div>
               </div>
               {participantUsers.map((remoteUser) => (
                 <div key={remoteUser.uid} className={styles.participantVideo}>
-                  <RemoteUser user={remoteUser} playVideo={true} />
-                  {!remoteUser.hasVideo && (
-                    <div className={styles.videoOffIndicator}>
-                      <VideoOff size={48} />
-                    </div>
-                  )}
+                  <RemoteUser user={remoteUser} playVideo={true}/>
+                  {!remoteUser.hasVideo && <div className={styles.videoOffIndicator}><VideoOff size={48}/></div>}
                   <div className={styles.identity}>
-                    {remoteUser.hasAudio ? (
-                      <Mic size={14} />
-                    ) : (
-                      <MicOff size={14} color="red" />
-                    )}{" "}
-                    User {remoteUser.uid}
+                    {remoteUser.hasAudio ? <Mic size={14}/> : <MicOff size={14} color="red"/>} User {remoteUser.uid}
                   </div>
                 </div>
               ))}
@@ -474,89 +316,19 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
 
       <footer className={styles.controlBar}>
         <div className={styles.controlsGroup}>
-          <button
-            title={micOn ? "Mute" : "Unmute"}
-            onClick={() => setMicOn((m) => !m)}
-            className={styles.controlButton}
-          >
-            {micOn ? <Mic /> : <MicOff />}
-          </button>
-          <button
-            title={cameraOn ? "Stop Camera" : "Start Camera"}
-            onClick={() => setCameraOn((c) => !c)}
-            className={styles.controlButton}
-          >
-            {cameraOn ? <Video /> : <VideoOff />}
-          </button>
+          <button title={micOn ? "Mute" : "Unmute"} onClick={() => setMicOn((m) => !m)} className={styles.controlButton}>{micOn ? <Mic /> : <MicOff />}</button>
+          <button title={cameraOn ? "Stop Camera" : "Start Camera"} onClick={() => setCameraOn((c) => !c)} className={styles.controlButton}>{cameraOn ? <Video /> : <VideoOff />}</button>
         </div>
         <div className={styles.controlsGroup}>
-          <button
-            title="Participants"
-            className={`${styles.controlButton} ${
-              showParticipants ? styles.buttonActive : ""
-            }`}
-            onClick={() => {
-              setShowParticipants((s) => !s);
-              setShowChat(false);
-            }}
-          >
-            <Users />
-          </button>
-          <button
-            title="Chat"
-            className={`${styles.controlButton} ${
-              showChat ? styles.buttonActive : ""
-            }`}
-            onClick={() => {
-              setShowChat((s) => !s);
-              setShowParticipants(false);
-            }}
-          >
-            <MessageSquare />
-          </button>
-          <button
-            title="Share Screen"
-            onClick={handleToggleScreenShare}
-            className={`${styles.controlButton} ${
-              isScreenSharing ? styles.buttonActive : ""
-            }`}
-          >
-            <ScreenShare />
-          </button>
-          <button
-            title="Whiteboard"
-            onClick={() => setShowWhiteboard((s) => !s)}
-            className={`${styles.controlButton} ${
-              showWhiteboard ? styles.buttonActive : ""
-            }`}
-          >
-            <Presentation />
-          </button>
-          <button
-            title="Raise Hand"
-            onClick={handleToggleRaiseHand}
-            className={`${styles.controlButton} ${
-              raisedHands.has(user.id) ? styles.buttonActive : ""
-            }`}
-          >
-            <Hand />
-          </button>
-          <button
-            title="React"
-            onClick={() => sendReaction("👍")}
-            className={styles.controlButton}
-          >
-            <SmilePlus />
-          </button>
+          <button title="Participants" className={`${styles.controlButton} ${showParticipants ? styles.buttonActive : ''}`} onClick={() => { setShowParticipants(s => !s); setShowChat(false); }}><Users /></button>
+          <button title="Chat" className={`${styles.controlButton} ${showChat ? styles.buttonActive : ''}`} onClick={() => { setShowChat(s => !s); setShowParticipants(false); }}><MessageSquare /></button>
+          <button title="Share Screen" onClick={handleToggleScreenShare} className={`${styles.controlButton} ${isScreenSharing ? styles.buttonActive : ""}`}><ScreenShare /></button>
+          <button title="Whiteboard" onClick={() => setShowWhiteboard((s) => !s)} className={`${styles.controlButton} ${showWhiteboard ? styles.buttonActive : ""}`}><Presentation /></button>
+          <button title="Raise Hand" onClick={handleToggleRaiseHand} className={`${styles.controlButton} ${raisedHands.has(user.id) ? styles.buttonActive : ""}`}><Hand /></button>
+          <button title="React" onClick={() => sendReaction("👍")} className={styles.controlButton}><SmilePlus /></button>
         </div>
         <div className={styles.controlsGroup}>
-          <button
-            title="End Call"
-            onClick={handleEndCall}
-            className={`${styles.controlButton} ${styles.endButton}`}
-          >
-            <PhoneOff />
-          </button>
+          <button title="End Call" onClick={handleEndCall} className={`${styles.controlButton} ${styles.endButton}`}><PhoneOff /></button>
         </div>
       </footer>
     </div>
@@ -571,7 +343,7 @@ export default function RoomExperience(props: RoomProps) {
       setAgoraClient(AgoraRTC.createClient({ codec: "vp8", mode: "rtc" }));
     }
   }, []);
-
+  
   const handleError = (err: IAgoraRTCError) => {
     console.error("Agora RTC Error:", err);
   };
