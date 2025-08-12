@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import styles from "../styles/RoomExperience.module.css";
 import dynamic from "next/dynamic";
-// FIX: Removed unused 'useAuth' and 'RtmEvent' imports
 import { useAgoraRtm } from "../hooks/useAgoraRtm";
 
 const Whiteboard = dynamic(() => import("./Whiteboard"), { ssr: false });
@@ -33,7 +32,7 @@ import {
   RemoteUser,
   LocalVideoTrack,
   useRTCClient,
-  IAgoraRTCError, // FIX: Corrected the import from AgoraRTCError
+  IAgoraRTCError,
   useLocalScreenTrack,
 } from "agora-rtc-react";
 import type { IAgoraRTCRemoteUser, IAgoraRTCClient } from "agora-rtc-sdk-ng";
@@ -66,7 +65,7 @@ interface Message {
   author: { id: string; name: string };
 }
 
-// --- FEATURE: PARTICIPANTS PANEL COMPONENT ---
+// --- PANEL COMPONENTS ---
 const ParticipantsPanel = ({
   localUser,
   remoteUsers,
@@ -130,7 +129,6 @@ const ParticipantsPanel = ({
     </aside>
   );
 };
-
 const FloatingReactions = ({ reactions }: { reactions: Reaction[] }) => (
   <div className={styles.reactionsContainer}>
     {reactions.map((r) => (
@@ -141,7 +139,6 @@ const FloatingReactions = ({ reactions }: { reactions: Reaction[] }) => (
     ))}
   </div>
 );
-
 const ChatPanel = ({ roomName, user }: PanelProps) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -226,10 +223,11 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
 
   const { localMicrophoneTrack } = useLocalMicrophoneTrack(micOn);
   const { localCameraTrack } = useLocalCameraTrack(cameraOn);
+  // FIX: Corrected the arguments for useLocalScreenTrack hook
   const { screenTrack, error: screenShareError } = useLocalScreenTrack(
     isScreenSharing,
-    { withAudio: "enable" },
-    "auto"
+    {},
+    "enable"
   );
   const remoteUsers = useRemoteUsers();
 
@@ -266,7 +264,6 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
     if (isScreenSharing) {
       setIsScreenSharing(false);
       if (screenTrack) {
-        // FIX: Handle both single track and array of tracks
         const tracksToUnpublish = Array.isArray(screenTrack)
           ? screenTrack
           : [screenTrack];
