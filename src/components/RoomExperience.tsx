@@ -223,7 +223,6 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
 
   const { localMicrophoneTrack } = useLocalMicrophoneTrack(micOn);
   const { localCameraTrack } = useLocalCameraTrack(cameraOn);
-  // FIX: Corrected the arguments for useLocalScreenTrack hook
   const { screenTrack, error: screenShareError } = useLocalScreenTrack(
     isScreenSharing,
     {},
@@ -344,11 +343,15 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
     sendRtmEvent({ type: "reaction", emoji, fromName: user.name });
   };
 
-  const isSomeoneSharing =
-    isScreenSharing || remoteUsers.some((u) => u.screenTrack);
-  const mainStageUser = isScreenSharing
-    ? null
-    : remoteUsers.find((u) => u.screenTrack);
+  // --- FIX IS HERE ---
+  // The most reliable way to check for a screen-share user is to see if their video track's type is "screen".
+  // The `remoteUsers` array can contain separate entries for a user's camera and their screen share.
+  const screenSharingUser = remoteUsers.find(
+    (u) => u.videoTrack?.getTrackMediaType() === "screen"
+  );
+  const isSomeoneSharing = isScreenSharing || !!screenSharingUser;
+
+  // Render the local screen share track if the user is sharing.
   const screenVideoTrack = Array.isArray(screenTrack)
     ? screenTrack[0]
     : screenTrack;
@@ -375,12 +378,8 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
                 {isScreenSharing && screenVideoTrack && (
                   <LocalVideoTrack track={screenVideoTrack} play={true} />
                 )}
-                {mainStageUser && (
-                  <RemoteUser
-                    user={mainStageUser}
-                    playVideo={true}
-                    mediaType="screen"
-                  />
+                {screenSharingUser && (
+                  <RemoteUser user={screenSharingUser} playVideo={true} />
                 )}
               </div>
               <div className={styles.pipColumn}>
@@ -389,7 +388,7 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
                   <div className={styles.identity}>{user.name} (You)</div>
                 </div>
                 {remoteUsers
-                  .filter((u) => u.uid !== mainStageUser?.uid)
+                  .filter((u) => u.uid !== screenSharingUser?.uid)
                   .map((remoteUser) => (
                     <div
                       key={remoteUser.uid}
