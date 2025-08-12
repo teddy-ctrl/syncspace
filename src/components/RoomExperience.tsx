@@ -39,7 +39,6 @@ import type {
   IAgoraRTCRemoteUser,
   IAgoraRTCClient,
   ILocalVideoTrack,
-  IRemoteVideoTrack,
 } from "agora-rtc-sdk-ng";
 
 // --- TYPE DEFINITIONS ---
@@ -68,11 +67,6 @@ interface Message {
   content: string;
   createdAt: string;
   author: { id: string; name: string };
-}
-
-// FIX: Create an extended type to safely access the screenTrack property, avoiding 'any'
-interface RemoteUserWithScreenTrack extends IAgoraRTCRemoteUser {
-  screenTrack?: IRemoteVideoTrack;
 }
 
 // --- PANEL COMPONENTS ---
@@ -139,7 +133,6 @@ const ParticipantsPanel = ({
     </aside>
   );
 };
-
 const FloatingReactions = ({ reactions }: { reactions: Reaction[] }) => (
   <div className={styles.reactionsContainer}>
     {reactions.map((r) => (
@@ -150,7 +143,6 @@ const FloatingReactions = ({ reactions }: { reactions: Reaction[] }) => (
     ))}
   </div>
 );
-
 const ChatPanel = ({ roomName, user }: PanelProps) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -355,17 +347,18 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
     sendRtmEvent({ type: "reaction", emoji, fromName: user.name });
   };
 
-  // --- UI RENDER LOGIC (FIXES APPLIED) ---
-  const screenSharingUser = remoteUsers.find(
-    (u: RemoteUserWithScreenTrack) => u.screenTrack
+  // --- THE FIX IS HERE ---
+  // Use a type assertion to 'any' as a pragmatic workaround for the library's
+  // incomplete type definition for IAgoraRTCRemoteUser.
+  const screenSharingUser = remoteUsers.find((u) => (u as any).screenTrack);
+  const participantUsers = remoteUsers.filter(
+    (user) => !(user as any).screenTrack
   );
+
   const isSomeoneSharing = isScreenSharing || !!screenSharingUser;
   const screenVideoTrack = Array.isArray(screenTrack)
     ? screenTrack[0]
     : screenTrack;
-  const participantUsers = remoteUsers.filter(
-    (user: RemoteUserWithScreenTrack) => !user.screenTrack
-  );
 
   return (
     <div className={styles.container}>
