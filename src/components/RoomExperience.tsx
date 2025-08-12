@@ -39,6 +39,7 @@ import type {
   IAgoraRTCRemoteUser,
   IAgoraRTCClient,
   ILocalVideoTrack,
+  IRemoteVideoTrack,
 } from "agora-rtc-sdk-ng";
 
 // --- TYPE DEFINITIONS ---
@@ -67,6 +68,18 @@ interface Message {
   content: string;
   createdAt: string;
   author: { id: string; name: string };
+}
+
+// Create an extended type to safely access the screenTrack property, avoiding 'any'
+interface RemoteUserWithScreenTrack extends IAgoraRTCRemoteUser {
+  screenTrack?: IRemoteVideoTrack;
+}
+
+// Create a type guard function to safely check for the screenTrack property
+function isScreenShareUser(
+  user: IAgoraRTCRemoteUser
+): user is RemoteUserWithScreenTrack {
+  return "screenTrack" in user && user.hasVideo;
 }
 
 // --- PANEL COMPONENTS ---
@@ -133,6 +146,7 @@ const ParticipantsPanel = ({
     </aside>
   );
 };
+
 const FloatingReactions = ({ reactions }: { reactions: Reaction[] }) => (
   <div className={styles.reactionsContainer}>
     {reactions.map((r) => (
@@ -143,6 +157,7 @@ const FloatingReactions = ({ reactions }: { reactions: Reaction[] }) => (
     ))}
   </div>
 );
+
 const ChatPanel = ({ roomName, user }: PanelProps) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -347,14 +362,10 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
     sendRtmEvent({ type: "reaction", emoji, fromName: user.name });
   };
 
-  // --- THE FIX IS HERE ---
-  // Use a type assertion to 'any' as a pragmatic workaround for the library's
-  // incomplete type definition for IAgoraRTCRemoteUser.
-  const screenSharingUser = remoteUsers.find((u) => (u as any).screenTrack);
+  const screenSharingUser = remoteUsers.find(isScreenShareUser);
   const participantUsers = remoteUsers.filter(
-    (user) => !(user as any).screenTrack
+    (user) => !isScreenShareUser(user)
   );
-
   const isSomeoneSharing = isScreenSharing || !!screenSharingUser;
   const screenVideoTrack = Array.isArray(screenTrack)
     ? screenTrack[0]
