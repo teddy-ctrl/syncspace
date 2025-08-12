@@ -294,9 +294,9 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
       const tracksToPublish = Array.isArray(screenTrack)
         ? screenTrack
         : [screenTrack];
-      agoraClient.publish(tracksToPublish).catch((e) => {
-        console.error("Failed to publish screen track:", e);
-      });
+      agoraClient
+        .publish(tracksToPublish)
+        .catch((e) => console.error("Failed to publish screen track:", e));
     }
   }, [isScreenSharing, screenTrack, agoraClient]);
 
@@ -343,16 +343,14 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
     sendRtmEvent({ type: "reaction", emoji, fromName: user.name });
   };
 
-  // --- THE FIX IS HERE ---
-  // Changed `.getTrackMediaType()` to the correct property `.trackMediaType`
-  const screenSharingUser = remoteUsers.find(
-    (u) => u.videoTrack?.trackMediaType === "screen"
-  );
+  const screenSharingUser = remoteUsers.find((u) => (u as any).screenTrack);
   const isSomeoneSharing = isScreenSharing || !!screenSharingUser;
-
   const screenVideoTrack = Array.isArray(screenTrack)
     ? screenTrack[0]
     : screenTrack;
+  const participantUsers = remoteUsers.filter(
+    (user) => !(user as any).screenTrack
+  );
 
   return (
     <div className={styles.container}>
@@ -385,7 +383,7 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
                   <LocalVideoTrack track={localCameraTrack} play={cameraOn} />
                   <div className={styles.identity}>{user.name} (You)</div>
                 </div>
-                {remoteUsers
+                {participantUsers
                   .filter((u) => u.uid !== screenSharingUser?.uid)
                   .map((remoteUser) => (
                     <div
@@ -414,7 +412,7 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
                   {user.name} (You)
                 </div>
               </div>
-              {remoteUsers.map((remoteUser) => (
+              {participantUsers.map((remoteUser) => (
                 <div key={remoteUser.uid} className={styles.participantVideo}>
                   <RemoteUser user={remoteUser} playVideo={true} />
                   {!remoteUser.hasVideo && (
@@ -441,7 +439,7 @@ const VideoCall = ({ roomName, user, appId, token }: RoomProps) => {
       {showParticipants && (
         <ParticipantsPanel
           localUser={user}
-          remoteUsers={remoteUsers}
+          remoteUsers={participantUsers}
           raisedHands={raisedHands}
           micOn={micOn}
           cameraOn={cameraOn}
@@ -552,6 +550,7 @@ export default function RoomExperience(props: RoomProps) {
     console.error("Agora RTC Error:", err);
   };
 
+  // FIX: Conditionally render the provider only when the client is not null.
   if (!agoraClient) {
     return (
       <div
@@ -562,7 +561,7 @@ export default function RoomExperience(props: RoomProps) {
           height: "100vh",
         }}
       >
-        <h1>Initializing...</h1>
+        <h1>Initializing Call...</h1>
       </div>
     );
   }
