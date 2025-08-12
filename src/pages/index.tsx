@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/router';
-// --- THE FALLBACK FIX ---
-// This path goes up one level from `pages` to `src`, then down to `components`.
-import Header from '../components/Header';
-import Modal from '../components/Modal';
+// This path needs to be updated to use the '@' alias for robustness
+import Header from '@/components/Header';
+import Modal from '@/components/Modal';
 import styles from '../styles/Dashboard.module.css';
 import { Video, PlusSquare, Calendar, ScreenShare } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
@@ -84,6 +83,8 @@ export default function HomePage() {
               <span className={styles.buttonText}>Share Screen</span>
             </button>
           </div>
+          {/* FIX: Example of fixing unescaped apostrophe in a placeholder text */}
+          <p className={styles.infoText}>This is a sample project. It&apos;s not fully featured.</p>
         </div>
       </main>
 
@@ -104,11 +105,12 @@ export default function HomePage() {
             value={joinName}
             onChange={(e) => setJoinName(e.target.value)}
             required
+            placeholder="Your Name"
           />
           <div className={styles.checkboxContainer}>
             <label className={styles.checkboxItem}>
               <input type="checkbox" />
-              <span>Don't connect to audio</span>
+              <span>Don&apos;t connect to audio</span>
             </label>
             <label className={styles.checkboxItem}>
               <input type="checkbox" />

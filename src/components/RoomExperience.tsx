@@ -17,8 +17,8 @@ import {
 } from "lucide-react";
 import styles from "../styles/RoomExperience.module.css";
 import dynamic from "next/dynamic";
-import { useAuth } from "../contexts/AuthContext";
-import { useAgoraRtm, RtmEvent } from "../hooks/useAgoraRtm";
+// FIX: Removed unused 'useAuth' and 'RtmEvent' imports
+import { useAgoraRtm } from "../hooks/useAgoraRtm";
 
 const Whiteboard = dynamic(() => import("./Whiteboard"), { ssr: false });
 
@@ -168,7 +168,6 @@ const ChatPanel = ({ roomName, user }: PanelProps) => {
         newSocket.disconnect();
       }
     };
-    // FIX: Added 'user' to dependency array for correctness, although it's unlikely to change mid-call.
   }, [roomName, user]);
 
   const handleSendMessage = (e: React.FormEvent) => {
